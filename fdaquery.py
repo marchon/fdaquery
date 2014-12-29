@@ -1,11 +1,14 @@
+from __future__ import division
 #!/usr/bin/python
 
 import requests, math
+
 
 fda_baseurl = "https://api.fda.gov/drug/event.json"
 count = 0
 limit = 99
 MAJOR_DICT = {}
+DEATH_DICT = {}
 
 #Function to get all Nuvaring results from openFDA
 def getNuvaringBatch(limit, skip):
@@ -24,21 +27,30 @@ def appendToMajorDict(dict, limit, batch):
         MAJOR_DICT[id] = result
         index += 1
 
+#Function to count deaths
+def countDeaths():
+    deathcount = 0
+    for dict in MAJOR_DICT:
+        if MAJOR_DICT[dict].has_key("seriousnessdeath"):
+            deathcount += 1
+            DEATH_DICT[dict] = MAJOR_DICT[dict]
+    return deathcount
 
 if __name__ == '__main__':
 
     #Grab the Total Number of Results
     init_results = getNuvaringBatch(limit, 0)
     count = init_results["meta"]['results']['total']
-    batches = int(math.ceil(count/limit))
+    batches = int(math.ceil(count / limit))
 
     for batch in range (0,batches):
-        print "Processing Batch " + str(batch) + " of " + str(batches)
-        results = getNuvaringBatch(limit, batch)
+        print "Processing Batch " + str(batch + 1) + " of " + str(batches)
+        results = getNuvaringBatch(limit, (batch*limit))
         appendToMajorDict(results["results"], limit, batch)
 
+    deathcount = countDeaths()
 
-    print "DONE!"
+    print "DONE! Nuvaring Deaths = " + str(deathcount)
 
 
 
