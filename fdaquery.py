@@ -12,7 +12,7 @@ DEATH_DICT = {}
 
 #Function to get all Nuvaring results from openFDA
 def getNuvaringBatch(limit, skip):
-    params = {"search": "patient.drug.openfda.brand_name:(nuvaring)", \
+    params = {"search": "patient.drug.openfda.brand_name:(YAZ)", \
               "limit": limit, \
               "skip": skip}
     r = requests.get(fda_baseurl, params=params)
