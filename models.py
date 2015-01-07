@@ -1,13 +1,14 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.engine.url import URL
 
 
 Base = declarative_base()
 
 patient_drugs = Table('patient_drugs', Base.metadata,
     Column('patientID', Integer, ForeignKey('patient.id')),
-    Column('drugID', Integer, ForeignKey('drug.id'))
+    Column('drugID', Integer, ForeignKey('drugs.id'))
 )
 
 patient_reaction = Table('patient_reaction', Base.metadata,
@@ -82,7 +83,7 @@ class Patient(Base):
     patientdeathdateformat = Column(String)
 
     drugs = relationship("Drugs", secondary=patient_drugs, backref="patients")
-    reaction = relationship("Reaction", secondar=patient_reaction, backref="patients")
+    reaction = relationship("Reaction", secondary=patient_reaction, backref="patients")
 
 
 class Reaction(Base):

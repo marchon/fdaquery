@@ -2,6 +2,9 @@ from __future__ import division
 #!/usr/bin/python
 
 import requests, math
+import models
+import config
+
 
 
 fda_baseurl = "https://api.fda.gov/drug/event.json"
@@ -12,7 +15,7 @@ DEATH_DICT = {}
 
 #Function to get all Nuvaring results from openFDA
 def getNuvaringBatch(limit, skip):
-    params = {"search": "patient.drug.openfda.brand_name:(YAZ)", \
+    params = {"search": "patient.drug.openfda.brand_name:(YAZ+OR+Nuvaring)", \
               "limit": limit, \
               "skip": skip}
     r = requests.get(fda_baseurl, params=params)
