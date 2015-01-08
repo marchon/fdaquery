@@ -2,7 +2,7 @@ from __future__ import division
 #!/usr/bin/python
 
 import requests, math
-import models
+from models import *
 import config
 
 
@@ -39,6 +39,8 @@ def countDeaths():
             DEATH_DICT[dict] = MAJOR_DICT[dict]
     return deathcount
 
+#Function to
+
 if __name__ == '__main__':
 
     #Grab the Total Number of Results
@@ -51,10 +53,13 @@ if __name__ == '__main__':
         results = getNuvaringBatch(limit, (batch*limit))
         appendToMajorDict(results["results"], limit, batch)
 
-    deathcount = countDeaths()
+    #deathcount = countDeaths()
+    #print "DONE! Nuvaring Deaths = " + str(deathcount)
 
-    print "DONE! Nuvaring Deaths = " + str(deathcount)
+    #Iterate through the dict and upload records into postgres database 'fdaquery'
 
+    for event in MAJOR_DICT:
+        pass
 
 
 
