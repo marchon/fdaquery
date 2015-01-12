@@ -73,7 +73,7 @@ if __name__ == '__main__':
     count = init_results["meta"]['results']['total']
     batches = int(math.ceil(count / limit))
 
-    numThreads = 15
+    numThreads = 1
     threads = []
 
     for batch in range (0, batches):
@@ -96,6 +96,7 @@ if __name__ == '__main__':
 
     #Iterate through the dict and upload records into postgres database 'fdaquery'
 
+    """
     for event in MAJOR_DICT:
 
         print "Processing Event " + str(event)
@@ -106,7 +107,7 @@ if __name__ == '__main__':
         #Call get_or_create on 'receiver' information
         if MAJOR_DICT[event]['sender'] is not None:
             senderID = get_or_create(session, Sender, **MAJOR_DICT[event]['sender'])
-
+    """
 
 
 
