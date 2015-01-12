@@ -2,6 +2,7 @@ from __future__ import division
 #!/usr/bin/python
 
 import requests, math
+from sqlalchemy.orm import sessionmaker
 from models import *
 import config
 
@@ -39,7 +40,17 @@ def countDeaths():
             DEATH_DICT[dict] = MAJOR_DICT[dict]
     return deathcount
 
-#Function to
+#Function to check if row in table exists.  If so, return the id .. if not, create it and return the id.
+def get_or_create(session, model, **kwargs):
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        return instance.id
+    else:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+        return instance.id
+
 
 if __name__ == '__main__':
 
@@ -56,9 +67,22 @@ if __name__ == '__main__':
     #deathcount = countDeaths()
     #print "DONE! Nuvaring Deaths = " + str(deathcount)
 
+    #Establish db session
+    engine = create_engine(URL(**config.DATABASE))
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
     #Iterate through the dict and upload records into postgres database 'fdaquery'
 
     for event in MAJOR_DICT:
+
+        #Call get_or_create on 'receiver' information:
+        if MAJOR_DICT[event]['receiver'] is not None:
+            receiverID = get_or_create(session, Receiver, **MAJOR_DICT[event]['receiver'])
+
+        #Call get_or_create on 'sender' information:
+        if MAJOR_DICT[event]['sender'] is not None:
+            senderID = get_or_create(session, Receiver, **MAJOR_DICT[event]['sender'])
         pass
 
 
