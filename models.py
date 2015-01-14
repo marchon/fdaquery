@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, create_engine
+from sqlalchemy import Column, Float, Integer, String, ForeignKey, Table, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.engine.url import URL
@@ -7,13 +7,13 @@ from sqlalchemy.engine.url import URL
 Base = declarative_base()
 
 patient_drugs = Table('patient_drugs', Base.metadata,
-    Column('patientID', Integer, ForeignKey('patient.id')),
-    Column('drugID', Integer, ForeignKey('drugs.id'))
+    Column('patientid', Integer, ForeignKey('patient.id')),
+    Column('drugid', Integer, ForeignKey('drugs.id'))
 )
 
 patient_reaction = Table('patient_reaction', Base.metadata,
-    Column('patientID', Integer, ForeignKey('patient.id')),
-    Column('reactionID', Integer, ForeignKey('reaction.id'))
+    Column('patientid', Integer, ForeignKey('patient.id')),
+    Column('reactionid', Integer, ForeignKey('reaction.id'))
 )
 
 
@@ -21,10 +21,12 @@ class Event(Base):
     __tablename__ = 'event'
 
     id = Column(Integer, primary_key=True)
-    patientID = Column(Integer, ForeignKey('patient.id'))
-    senderID = Column(Integer, ForeignKey('sender.id'))
-    receiverID = Column(Integer, ForeignKey('receiver.id'))
-    epoch = Column(String)
+    patientid = Column(Integer, ForeignKey('patient.id'))
+    senderid = Column(Integer, ForeignKey('sender.id'))
+    receiverid = Column(Integer, ForeignKey('receiver.id'))
+    primarysourceid = Column(Integer, ForeignKey('primarysource.id'))
+    reportduplicateid = Column(Integer, ForeignKey('reportduplicate.id'))
+    epoch = Column(Float)
     companynumb = Column(String)
     fulfillexpeditecriteria = Column(String)
     receiptdate = Column(String)
@@ -44,15 +46,18 @@ class Event(Base):
     transmissiondateformat = Column(String)
     duplicate = Column(String)
     occurcountry = Column(String)
-    primarycountry = Column(String)
+    primarysourcecountry = Column(String)
     primarysource_qualification = Column(String)
     primarysource_reportercountry = Column(String)
     reportduplicate_duplicatesource = Column(String)
     reportduplicate_duplicatenumb = Column(String)
+    reporttype = Column(String)
 
     patient = relationship("Patient", backref="events")
     sender = relationship("Sender", backref="events")
     receiver = relationship("Receiver", backref="events")
+    primarysource = relationship("Primarysource", backref="events")
+    reportduplicate = relationship("Reportduplicate", backref="events")
 
 
 class Sender(Base):
@@ -69,6 +74,22 @@ class Receiver(Base):
     id = Column(Integer, primary_key=True)
     receiverorganization = Column(String)
     receivertype = Column(String)
+
+
+class Primarysource(Base):
+    __tablename__ = 'primarysource'
+
+    id = Column(Integer, primary_key=True)
+    qualification = Column(String)
+    reportercountry = Column(String)
+
+
+class Reportduplicate(Base):
+    __tablename__ = 'reportduplicate'
+
+    id = Column(Integer, primary_key=True)
+    duplicatesource = Column(String)
+    duplicatenumb = Column(String)
 
 
 class Patient(Base):
@@ -99,7 +120,7 @@ class Drugs(Base):
     __tablename__ = 'drugs'
 
     id = Column(Integer, primary_key=True)
-    openfdaID = Column(Integer, ForeignKey('openfda.id'))
+    openfdaid = Column(Integer, ForeignKey('openfda.id'))
     actiondrug = Column(String)
     drugadditional = Column(String)
     drugcumulativedosagenumb = Column(String)
@@ -110,14 +131,17 @@ class Drugs(Base):
     drugrecurreadministration = Column(String)
     drugseparatedosagenumb = Column(String)
     drugstructuredosagenumb = Column(String)
-    drugstructureunitnumb = Column(String)
+    drugstructuredosageunit = Column(String)
     drugadministrationroute = Column(String)
     drugauthorizationnumb = Column(String)
     drugbatchnumb = Column(String)
     drugcharacterization = Column(String)
     drugdosagetext = Column(String)
+    drugindication = Column(String)
     drugenddate = Column(String)
     drugenddateformat = Column(String)
+    drugstartdate = Column(String)
+    drugstartdateformat = Column(String)
     drugtreatmentduration = Column(String)
     drugtreatmentdurationunit = Column(String)
     medicinalproduct = Column(String)
