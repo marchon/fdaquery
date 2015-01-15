@@ -78,11 +78,74 @@ def get_or_create(session, model, **kwargs):
         session.commit()
         return instance
 
-def create_record(model, **kwargs):
+#Function to create record with checking if it exists first.
+def create_record(model, session, **kwargs):
     instance = model(**(filter_out_dicts(kwargs)))
     session.add(instance)
     session.commit()
     return instance
+
+#Function to create an entire adverse event from MAJOR_DICT.
+def create_adverse_event(event):
+
+    #Create new session
+    session = Session()
+
+    #Rename @epoch key
+    if MAJOR_DICT[event].has_key('@epoch'):
+        MAJOR_DICT[event]['epoch'] = MAJOR_DICT[event].pop('@epoch')
+
+    #Create Event in Event table
+    if MAJOR_DICT.has_key(event) and MAJOR_DICT[event] is not None:
+        eventOBJ = get_or_create(session, Event, **MAJOR_DICT[event])
+
+        #Call get_or_create on 'receiver' information
+        if MAJOR_DICT[event]['receiver'] is not None:
+            receiverOBJ = get_or_create(session, Receiver, **MAJOR_DICT[event]['receiver'])
+            eventOBJ.receiver=receiverOBJ
+
+        #Call get_or_create on 'sender' information
+        if MAJOR_DICT[event]['sender'] is not None:
+            senderOBJ = get_or_create(session, Sender, **MAJOR_DICT[event]['sender'])
+            eventOBJ.sender=senderOBJ
+
+        #Call get_or_create on 'primarysource' information
+        if MAJOR_DICT[event].has_key('primarysource') and MAJOR_DICT[event]['primarysource'] is not None:
+            primarysourceOBJ = get_or_create(session, Primarysource, **MAJOR_DICT[event]['primarysource'])
+            eventOBJ.primarysource=primarysourceOBJ
+
+        #Call get_or_create on 'reportduplicate' information
+        if MAJOR_DICT[event].has_key('reportduplicate') and MAJOR_DICT[event]['reportduplicate'] is not None:
+            reportduplicateOBJ = get_or_create(session, Reportduplicate, **MAJOR_DICT[event]['reportduplicate'])
+            eventOBJ.reportduplicate=reportduplicateOBJ
+
+        #Call get_or_create on 'patient' information and in turn ... 'drug' and 'reaction'
+            if MAJOR_DICT[event]['patient'] is not None:
+                patientOBJ = get_or_create(session, Patient, **MAJOR_DICT[event]['patient'])
+                eventOBJ.patient=patientOBJ
+
+                #Call get_or_create on 'reaction' information
+                if MAJOR_DICT[event]['patient'].has_key('reaction') and MAJOR_DICT[event]['patient']['reaction'] is not None:
+                    for reaction in MAJOR_DICT[event]['patient']['reaction']:
+                        reactionOBJ = get_or_create(session, Reaction, **reaction)
+                        patientOBJ.reaction.append(reactionOBJ)
+
+                #Call get_or_create on 'drug' information
+                if MAJOR_DICT[event]['patient'].has_key('drug') and MAJOR_DICT[event]['patient']['drug'] is not None:
+                    for drug in MAJOR_DICT[event]['patient']['drug']:
+                        drugsOBJ = get_or_create(session, Drugs, **drug)
+                        patientOBJ.drugs.append(drugsOBJ)
+
+    #Commit and Tear Down session
+    try:
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 
 
 if __name__ == '__main__':
@@ -92,81 +155,40 @@ if __name__ == '__main__':
     count = init_results["meta"]['results']['total']
     batches = int(math.ceil(count / limit))
 
-    numThreads = 1
+    numThreads = 20
     threads = []
 
-    for batch in range (0, 20):
+    for batch in range (0, batches):
         #print "Processing Batch " + str(batch + 1) + " of " + str(batches)
         t = threading.Thread(target=getNuvaringBatch_mt, args=(limit, (batch*limit), batch, batches))
         threads.append(t)
+        t.start()
         if len(threads) == numThreads:
-            for x in threads:
-                x.start()
-
             for x in threads:
                 x.join()
 
             del threads[:]
+    for x in threads:
+        x.join()
 
     #Establish db session
     engine = create_engine(URL(**config.DATABASE))
     Session = sessionmaker(bind=engine)
-    session = Session()
+
 
     #Iterate through the dict and upload records into postgres database 'fdaquery'
+    numThreads = 1
+    threads = []
     for event in MAJOR_DICT:
 
         print "Processing Event " + str(event)
+        t = threading.Thread(target=create_adverse_event, args=(event,))
+        threads.append(t)
+        t.start()
+        if len(threads) == numThreads:
+            for x in threads:
+                x.join()
 
-        #Create Event in Event table
-
-        #Rename @epoch key
-        if MAJOR_DICT[event].has_key('@epoch'):
-            MAJOR_DICT[event]['epoch'] = MAJOR_DICT[event].pop('@epoch')
-
-        #Create Event in Event table
-        if MAJOR_DICT.has_key(event) and MAJOR_DICT[event] is not None:
-            eventOBJ = get_or_create(session, Event, **MAJOR_DICT[event])
-
-            #Call get_or_create on 'receiver' information
-            if MAJOR_DICT[event]['receiver'] is not None:
-                receiverOBJ = get_or_create(session, Receiver, **MAJOR_DICT[event]['receiver'])
-                eventOBJ.receiver=receiverOBJ
-
-            #Call get_or_create on 'sender' information
-            if MAJOR_DICT[event]['sender'] is not None:
-                senderOBJ = get_or_create(session, Sender, **MAJOR_DICT[event]['sender'])
-                eventOBJ.sender=senderOBJ
-
-            #Call get_or_create on 'primarysource' information
-            if MAJOR_DICT[event].has_key('primarysource') and MAJOR_DICT[event]['primarysource'] is not None:
-                primarysourceOBJ = get_or_create(session, Primarysource, **MAJOR_DICT[event]['primarysource'])
-                eventOBJ.primarysource=primarysourceOBJ
-
-            #Call get_or_create on 'reportduplicate' information
-            if MAJOR_DICT[event].has_key('reportduplicate') and MAJOR_DICT[event]['reportduplicate'] is not None:
-                reportduplicateOBJ = get_or_create(session, Reportduplicate, **MAJOR_DICT[event]['reportduplicate'])
-                eventOBJ.reportduplicate=reportduplicateOBJ
-
-
-            #Call get_or_create on 'patient' information and in turn ... 'drug' and 'reaction'
-                if MAJOR_DICT[event]['patient'] is not None:
-                    patientOBJ = get_or_create(session, Patient, **MAJOR_DICT[event]['patient'])
-                    eventOBJ.patient=patientOBJ
-
-                    #Call get_or_create on 'reaction' information
-                    if MAJOR_DICT[event]['patient'].has_key('reaction') and MAJOR_DICT[event]['patient']['reaction'] is not None:
-                        for reaction in MAJOR_DICT[event]['patient']['reaction']:
-                            reactionOBJ = get_or_create(session, Reaction, **reaction)
-                            patientOBJ.reaction.append(reactionOBJ)
-
-                    #Call get_or_create on 'drug' information
-                    if MAJOR_DICT[event]['patient'].has_key('drug') and MAJOR_DICT[event]['patient']['drug'] is not None:
-                        for drug in MAJOR_DICT[event]['patient']['drug']:
-                            drugsOBJ = get_or_create(session, Drugs, **drug)
-                            patientOBJ.drugs.append(drugsOBJ)
-
-            session.commit()
-
-        print "hello"
-
+            del threads[:]
+    for x in threads:
+        x.join()

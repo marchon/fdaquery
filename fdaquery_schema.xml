@@ -53,6 +53,14 @@
 <datatype>INTEGER</datatype>
 <default>NULL</default><relation table="receiver" row="id" />
 </row>
+<row name="primarysourceid" null="1" autoincrement="0">
+<datatype>INTEGER</datatype>
+<default>NULL</default><relation table="primarysource" row="id" />
+</row>
+<row name="reportduplicateid" null="1" autoincrement="0">
+<datatype>INTEGER</datatype>
+<default>NULL</default><relation table="reportduplicate" row="id" />
+</row>
 <row name="epoch" null="1" autoincrement="0">
 <datatype>DOUBLE</datatype>
 <default>NULL</default></row>
@@ -114,12 +122,6 @@
 <datatype>VARCHAR</datatype>
 <default>NULL</default></row>
 <row name="primarycountry" null="1" autoincrement="0">
-<datatype>VARCHAR</datatype>
-<default>NULL</default></row>
-<row name="primarysource_qualification" null="1" autoincrement="0">
-<datatype>VARCHAR</datatype>
-<default>NULL</default></row>
-<row name="primarysource_reportercountry" null="1" autoincrement="0">
 <datatype>VARCHAR</datatype>
 <default>NULL</default></row>
 <row name="reportduplicate_duplicatesource" null="1" autoincrement="0">
@@ -258,7 +260,7 @@
 <part>patientID</part>
 </key>
 </table>
-<table x="280" y="238" name="sender">
+<table x="319" y="262" name="sender">
 <row name="id" null="1" autoincrement="1">
 <datatype>INTEGER</datatype>
 <default>NULL</default></row>
@@ -302,7 +304,7 @@
 <part>patientID</part>
 </key>
 </table>
-<table x="274" y="368" name="receiver">
+<table x="305" y="375" name="receiver">
 <row name="id" null="1" autoincrement="1">
 <datatype>INTEGER</datatype>
 <default>NULL</default></row>
@@ -369,6 +371,34 @@
 <datatype>VARCHAR</datatype>
 <default>NULL</default></row>
 <row name="unii" null="1" autoincrement="0">
+<datatype>VARCHAR</datatype>
+<default>NULL</default></row>
+<key type="PRIMARY" name="">
+<part>id</part>
+</key>
+</table>
+<table x="295" y="498" name="primarysource">
+<row name="id" null="1" autoincrement="1">
+<datatype>INTEGER</datatype>
+<default>NULL</default></row>
+<row name="qualification" null="1" autoincrement="0">
+<datatype>VARCHAR</datatype>
+<default>NULL</default></row>
+<row name="reportercountry" null="1" autoincrement="0">
+<datatype>VARCHAR</datatype>
+<default>NULL</default></row>
+<key type="PRIMARY" name="">
+<part>id</part>
+</key>
+</table>
+<table x="283" y="631" name="reportduplicate">
+<row name="id" null="1" autoincrement="1">
+<datatype>INTEGER</datatype>
+<default>NULL</default></row>
+<row name="duplicatesource" null="1" autoincrement="0">
+<datatype>VARCHAR</datatype>
+<default>NULL</default></row>
+<row name="duplicatenumb" null="1" autoincrement="0">
 <datatype>VARCHAR</datatype>
 <default>NULL</default></row>
 <key type="PRIMARY" name="">
