@@ -1,7 +1,7 @@
 from __future__ import division
 #!/usr/bin/python
 
-import requests, math, threading
+import requests, math, threading, json
 from sqlalchemy.orm import sessionmaker
 from models import *
 import config
@@ -91,6 +91,31 @@ def create_record(model, session, **kwargs):
     session.commit()
     return instance
 
+
+#Function to create an entire adverse event JSON row from MAJOR_DICT
+def create_adverse_event_json(event):
+
+    #Create new session
+    session = Session()
+    event_json = Event_json()
+
+    #Rename @epoch key
+    if MAJOR_DICT[event].has_key('@epoch'):
+        MAJOR_DICT[event]['epoch'] = MAJOR_DICT[event].pop('@epoch')
+
+    #Convert to json
+    #if MAJOR_DICT.has_key(event) and MAJOR_DICT[event] is not None:
+        #eventJSON = json.dumps(MAJOR_DICT[event])
+
+    #Add to instance
+    #print event_json
+    event_json.event = MAJOR_DICT[event]
+
+    #Add to database
+    session.add(event_json)
+    session.commit()
+
+
 #Function to create an entire adverse event from MAJOR_DICT.
 def create_adverse_event(event):
 
@@ -152,6 +177,30 @@ def create_adverse_event(event):
         session.close()
 
 
+#Function to populate Meta Table
+def populate_meta(last_updated, limit, total):
+
+    #Create new session
+    session = Session()
+
+    #Populate Meta
+    meta = Meta()
+    meta.last_updated = last_updated
+    meta.limit = limit
+    meta.total = total
+    session.add(meta)
+
+    #Commit and Tear Down session
+    try:
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+
 
 
 if __name__ == '__main__':
@@ -161,7 +210,7 @@ if __name__ == '__main__':
     count = init_results["meta"]['results']['total']
     batches = int(math.ceil(count / limit))
 
-    numThreads = 80
+    numThreads = 50
     threads = []
 
     for batch in range (0, batches):
@@ -181,14 +230,16 @@ if __name__ == '__main__':
     engine = create_engine(URL(**config.DATABASE))
     Session = sessionmaker(bind=engine)
 
+    #Call populate_meta
+    populate_meta(init_results['meta']['last_updated'], init_results['meta']['results']['limit'], init_results['meta']['results']['total'])
 
     #Iterate through the dict and upload records into postgres database 'fdaquery'
-    numThreads = 4
+    numThreads = 50
     threads = []
     for event in MAJOR_DICT:
 
         print "Processing Event " + str(event)
-        t = threading.Thread(target=create_adverse_event, args=(event,))
+        t = threading.Thread(target=create_adverse_event_json, args=(event,))
         threads.append(t)
         t.start()
         if len(threads) == numThreads:

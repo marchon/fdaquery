@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Float, Integer, String, ForeignKey, Table, create_engine
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.engine.url import URL
@@ -171,4 +172,19 @@ class Openfda(Base):
     substance_name = Column(String)
     unii = Column(String)
 
+
+class Event_json(Base):
+    __tablename__ = 'event_json'
+
+    id = Column(Integer, primary_key=True)
+    event = Column(JSON)
+
+
+class Meta(Base):
+    __tablename__ = 'meta'
+
+    id = Column(Integer, primary_key=True)
+    last_updated = Column(String)
+    limit = Column(String)
+    total = Column(String)
 
